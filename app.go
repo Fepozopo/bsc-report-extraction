@@ -16,8 +16,7 @@ func openFileWindow(parent fyne.Window, callback func(r fyne.URIReadCloser, e er
 	}, parent).Show()
 }
 
-// selectFiles creates a GUI window to select the product line to update and the paths to the hotsheet, stock report, and sales report files.
-// It then returns the selection and the paths as strings.
+// selectFiles prompts the user to select a commission report and returns the path to the selected file.
 func selectFiles(a fyne.App) string {
 	window := a.NewWindow("Commission Report")
 	window.SetContent(widget.NewLabel("Please select the commission report:"))
