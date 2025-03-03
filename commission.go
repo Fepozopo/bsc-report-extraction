@@ -9,10 +9,15 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+// processExcelFile processes an input Excel file by parsing its contents,
+// identifying rows associated with different sales representatives based on
+// bolded initials in the first column, and writing separate Excel files for
+// each sales rep group. It logs the processing steps to a log file.
+// The input is the path to the Excel file, and it returns an error if any
+// operation fails during processing.
 func processExcelFile(inputFile string) error {
 	logger, logFile, err := CreateLogger("processExcelFile", "", "", "INFO")
 	if err != nil {
-		logger.Printf("failed to create log file: %v", err)
 		return fmt.Errorf("error creating log file: %w", err)
 	}
 	defer logFile.Close()
@@ -63,6 +68,9 @@ func processExcelFile(inputFile string) error {
 	return nil
 }
 
+// isBold checks if the font style of a given cell in an Excel sheet is bold.
+// It returns true if the font is bold, false otherwise. If there's an error
+// retrieving the style or its details, an error is returned.
 func isBold(f *excelize.File, cell string) (bool, error) {
 	// Get the style ID for the cell
 	styleID, err := f.GetCellStyle("Sheet1", cell)
@@ -85,6 +93,9 @@ func isBold(f *excelize.File, cell string) (bool, error) {
 	return style.Font.Bold, nil
 }
 
+// writeToExcelFile writes a given set of rows to a new Excel file with title, date range, header, and data.
+// The file is saved in the output directory with the given initial as the file name.
+// If there's an error writing the file, an error is returned.
 func writeToExcelFile(initial string, rows [][]string) error {
 	// Create output directory if it doesn't exist
 	outputDir := "output"
