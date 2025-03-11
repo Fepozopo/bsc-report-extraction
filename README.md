@@ -1,4 +1,4 @@
-# Commission Report
+# Report Extractor
 
 ## Description
 
@@ -23,7 +23,7 @@ Before you begin, ensure you have the following installed on your system:
 
 ## Usage
 
-1. The program will open a GUI window where you can select the input Excel file.
+1. The program will open a GUI window where you can select the report type and the input Excel file.
 2. The program will process the Excel file and create a new file for each sales rep group.
 3. These new files will be saved in the "output" directory in the same directory as the input file. If the "output" directory does not exist, it will be created.
 4. The program will also create a log file in the "logs-bsc" directory in the temporary directory of the current user. If the "logs-bsc" directory does not exist, it will be created.
@@ -49,8 +49,8 @@ These commands will build the program for the specified platform and output the 
 ### Clone the repository
 
 ```bash
-git clone https://github.com/Fepozopo/bsc-commissions.git
-cd bsc-commissions
+git clone https://github.com/Fepozopo/bsc-report-extractor.git
+cd bsc-report-extractor
 ```
 
 ### Submit a Pull Request
