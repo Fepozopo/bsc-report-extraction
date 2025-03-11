@@ -1,7 +1,7 @@
 # Makefile for building this Go program with CGO for multiple OS targets
 
 # Base binary name (without extension)
-BINARY_BASE := commission-report
+BINARY_BASE := report-extractor
 
 # Create folder function
 define MAKE_BIN_DIR
