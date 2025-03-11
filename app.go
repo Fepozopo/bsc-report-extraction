@@ -17,13 +17,17 @@ func openFileWindow(parent fyne.Window, callback func(r fyne.URIReadCloser, e er
 }
 
 // selectFiles prompts the user to select a commission report and returns the path to the selected file.
-func selectFiles(a fyne.App) string {
+func selectFiles(a fyne.App) (string, string) {
 	window := a.NewWindow("Commission Report")
 	window.SetContent(widget.NewLabel("Please select the commission report:"))
 	window.Resize(fyne.NewSize(900, 800))
 
 	files := make([]*widget.Entry, 3)
 	buttons := make([]*widget.Button, 3)
+
+	options := []string{"commission", "royalty"}
+	list := widget.NewSelect(options, func(s string) {
+	})
 
 	for i := range files {
 		files[i] = widget.NewEntry()
@@ -39,8 +43,10 @@ func selectFiles(a fyne.App) string {
 		}(i))
 	}
 
+	var selection string
 	var filePaths []string
 	submitButton := widget.NewButton("Submit", func() {
+		selection = list.Selected
 		filePaths = make([]string, len(files))
 		for i, entry := range files {
 			filePaths[i] = entry.Text
@@ -50,6 +56,9 @@ func selectFiles(a fyne.App) string {
 
 	window.SetContent(container.New(
 		layout.NewVBoxLayout(),
+		widget.NewLabelWithStyle("Which report type are you looking for?", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		list,
+		layout.NewSpacer(),
 		widget.NewLabelWithStyle("Select the commission report:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		files[0],
 		buttons[0],
@@ -63,5 +72,5 @@ func selectFiles(a fyne.App) string {
 		window.Close()
 	})
 
-	return filePaths[0]
+	return selection, filePaths[0]
 }

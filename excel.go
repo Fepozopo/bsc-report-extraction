@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/xuri/excelize/v2"
@@ -15,7 +16,7 @@ import (
 // each sales rep group. It logs the processing steps to a log file.
 // The input is the path to the Excel file, and it returns an error if any
 // operation fails during processing.
-func processExcelFile(inputFile string) error {
+func processExcelFile(reportType, inputFile string) error {
 	logger, logFile, err := CreateLogger("processExcelFile", "", "", "INFO")
 	if err != nil {
 		return fmt.Errorf("error creating log file: %w", err)
@@ -38,16 +39,29 @@ func processExcelFile(inputFile string) error {
 	currentInitial := ""
 	currentRows := make(map[string][][]string)
 
+	var column string
+	var columnIndex int
+	switch {
+	case reportType == "commission":
+		column = "A"
+		columnIndex = 0
+	case reportType == "royalty":
+		column = "B"
+		columnIndex = 1
+	default:
+		return fmt.Errorf("unknown report type: %s", reportType)
+	}
+
 	for i, row := range rows {
-		if i > 0 && len(row) > 0 { // Check if the row is not empty and skip the first row
-			cell := fmt.Sprintf("A%d", i+1) // Construct the cell reference for the first column
+		if i > 1 && len(row) > 0 { // Ignore the first two rows
+			cell := fmt.Sprintf("%s%d", column, i+1) // Construct the cell reference for the sales rep initials
 			bold, err := isBold(f, cell)
 			if err != nil {
 				return fmt.Errorf("error checking bold status for cell %s: %w", cell, err)
 			}
-			if bold {
+			if bold && !strings.Contains(row[columnIndex], "Totals") {
 				// If we encounter a new sales rep initials
-				currentInitial = row[0]
+				currentInitial = row[columnIndex]
 				currentRows[currentInitial] = nil // Initialize the slice for this initial
 			}
 			// If the current initial is not empty, add the row to the corresponding sales rep
@@ -60,7 +74,7 @@ func processExcelFile(inputFile string) error {
 
 	// Write each sales rep's data to a new Excel file
 	for initial, rows := range currentRows {
-		if err := writeToExcelFile(initial, rows); err != nil {
+		if err := writeToExcelFile(reportType, initial, rows); err != nil {
 			return fmt.Errorf("error writing to Excel file: %w", err)
 		}
 	}
@@ -78,10 +92,6 @@ func isBold(f *excelize.File, cell string) (bool, error) {
 		// Return false if there's an error retrieving the style
 		return false, fmt.Errorf("error getting style for cell %s: %w", cell, err)
 	}
-	if styleID == 0 {
-		// Handle case where no style is found
-		return false, fmt.Errorf("no style found for cell %s", cell)
-	}
 
 	// Get the style details
 	style, err := f.GetStyle(styleID)
@@ -96,7 +106,7 @@ func isBold(f *excelize.File, cell string) (bool, error) {
 // writeToExcelFile writes a given set of rows to a new Excel file with title, date range, header, and data.
 // The file is saved in the output directory with the given initial as the file name.
 // If there's an error writing the file, an error is returned.
-func writeToExcelFile(initial string, rows [][]string) error {
+func writeToExcelFile(reportType, initial string, rows [][]string) error {
 	// Create output directory if it doesn't exist
 	outputDir := "output"
 	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
@@ -111,7 +121,15 @@ func writeToExcelFile(initial string, rows [][]string) error {
 	lastDayOfPrevMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 0, -1)
 
 	// Define the title and date range
-	title := "Commission Report for Biely & Shoaf"
+	var title string
+	switch reportType {
+	case "commission":
+		title = "Commission Report for Biely & Shoaf"
+	case "royalty":
+		title = "Royalty Report for Biely & Shoaf"
+	default:
+		return fmt.Errorf("unknown report type: %s", reportType)
+	}
 	dateRange := fmt.Sprintf("For Invoices Dated %s to %s", firstDayOfPrevMonth.Format("1/2/2006"), lastDayOfPrevMonth.Format("1/2/2006"))
 
 	// Set the title and date range in the first two rows
@@ -131,11 +149,20 @@ func writeToExcelFile(initial string, rows [][]string) error {
 	f.SetCellValue("Sheet1", "A2", dateRange)
 
 	// Define the header
-	header := []string{
-		"SPers No", "Name", "Cust No", "BillToName", "BillToAdd1", "BillToAdd2", "",
-		"BillToCity", "BillToState", "BillToZip", "ShipToName", "", "ShipToAdd1",
-		"ShipToAdd2", "ShipToCity", "ShipToState", "ShipToZip", "Code No.", "PO Number",
-		"Number", "Date", "to Comm.", "Payable",
+	var header []string
+	switch reportType {
+	case "commission":
+		header = []string{
+			"SPers No", "Name", "Cust No", "BillToName", "BillToAdd1", "BillToAdd2", "",
+			"BillToCity", "BillToState", "BillToZip", "ShipToName", "", "ShipToAdd1",
+			"ShipToAdd2", "ShipToCity", "ShipToState", "ShipToZip", "Code No.", "PO Number",
+			"Number", "Date", "to Comm.", "Payable",
+		}
+	case "royalty":
+		header = []string{
+			"", "Artist", "", "", "QuantityShipped", "Net Sales Amount", "Royalty Percent", "", "",
+			"Royalty Amount",
+		}
 	}
 
 	// Set the header in the third row

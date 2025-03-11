@@ -20,7 +20,7 @@ func main() {
 	myApp := app.New()
 	defer myApp.Quit()
 
-	inputExcelFile := selectFiles(myApp)
+	reportType, inputExcelFile := selectFiles(myApp)
 
 	// If no file is selected, exit the program
 	if inputExcelFile == "" {
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	// Process the Excel file
-	err = processExcelFile(inputExcelFile)
+	err = processExcelFile(reportType, inputExcelFile)
 	if err != nil {
 		logger.Printf("Error processing Excel file: %v", err)
 		return
