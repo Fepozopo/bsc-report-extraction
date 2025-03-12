@@ -18,7 +18,7 @@ func openFileWindow(parent fyne.Window, callback func(r fyne.URIReadCloser, e er
 
 // selectFiles prompts the user to select a commission report and returns the path to the selected file.
 func selectFiles(a fyne.App) (string, string) {
-	window := a.NewWindow("Commission Report")
+	window := a.NewWindow("Report Extractor")
 	window.SetContent(widget.NewLabel("Please select the commission report:"))
 	window.Resize(fyne.NewSize(900, 800))
 
